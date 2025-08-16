@@ -3,21 +3,87 @@ import { PlantillaDocumento, CampoPlantilla } from '../types';
 import { generarDocumento } from '../services/api';
 import html2pdf from 'html2pdf.js';
 import { Document, Packer, Paragraph, TextRun } from 'docx';
+import parse, { domToReact, HTMLReactParserOptions, Element } from 'html-react-parser';
+
 
 interface GenerarDocumentoProps {
   plantilla: PlantillaDocumento;
   onDocumentoGenerado: (htmlResultante: string) => void;
 }
 
-function getPreviewHtml(html: string, campos: CampoPlantilla[], datos: Record<string, string>, onClickVar?: (nombre: string) => void) {
-  let preview = html;
-  campos.forEach(campo => {
-    const valor = datos[campo.nombre_variable]?.trim();
-    const span = `<span class="preview-var" data-var="${campo.nombre_variable}">${valor || `{{${campo.nombre_variable}}}`}</span>`;
-    preview = preview.replaceAll(`{{${campo.nombre_variable}}}`, span);
-  });
-  return preview;
+function VistaPreviaInteractiva({
+  plantilla,
+  datos,
+  editingVar,
+  setEditingVar,
+  handleInlineChange
+}: {
+  plantilla: PlantillaDocumento,
+  datos: Record<string, string>,
+  editingVar: string | null,
+  setEditingVar: (v: string | null) => void,
+  handleInlineChange: (nombre: string, valor: string) => void
+}) {
+  const variableRegex = /{{(.*?)}}/g;
+
+  const options: HTMLReactParserOptions = {
+    replace: (domNode) => {
+      if (domNode.type === 'text') {
+        const text = domNode.data as string;
+        const partes: React.ReactNode[] = [];
+        let lastIndex = 0;
+        let match;
+        while ((match = variableRegex.exec(text)) !== null) {
+          if (match.index > lastIndex) {
+            partes.push(text.slice(lastIndex, match.index));
+          }
+          const varName = match[1];
+          partes.push(
+            editingVar === varName ? (
+              <input
+                key={varName}
+                type="text"
+                value={datos[varName] || ''}
+                className="inline-edit-input"
+                style={{ border: '1px solid #888', padding: '2px 4px', borderRadius: '4px', width: '120px' }}
+                onChange={e => handleInlineChange(varName, e.target.value)}
+                onBlur={() => setEditingVar(null)}
+                autoFocus
+              />
+            ) : (
+              <span
+                key={varName}
+                className="preview-var"
+                data-var={varName}
+                style={{ background: '#e0f7fa', cursor: 'pointer', borderRadius: '4px', padding: '2px 4px' }}
+                onClick={() => setEditingVar(varName)}
+              >
+                {datos[varName]?.trim() || `{{${varName}}}`}
+              </span>
+            )
+          );
+          lastIndex = variableRegex.lastIndex;
+        }
+        if (lastIndex < text.length) {
+          partes.push(text.slice(lastIndex));
+        }
+        return <>{partes}</>;
+      }
+      return undefined;
+    }
+  };
+
+  return (
+    <div className="prose max-w-none mt-2 cursor-pointer border border-dashed border-gray-300 rounded-md p-4 bg-gray-50 min-h-[120px]">
+      {parse(plantilla.html_con_campos, options)}
+    </div>
+  );
 }
+
+function renderHtmlConDatos(html: string, datos: Record<string, string>) {
+  return html.replace(/{{(.*?)}}/g, (_, varName) => datos[varName]?.trim() || `{{${varName}}}`);
+}
+
 
 function descargarPdfPreview(html: string) {
   const container = document.createElement('div');
@@ -153,7 +219,34 @@ const GenerarDocumento: React.FC<GenerarDocumentoProps> = ({
   const [focusedVar, setFocusedVar] = useState<string | null>(null);
   const [mensaje, setMensaje] = useState('');
   const [mensajeTipo, setMensajeTipo] = useState<'exito' | 'error' | ''>('');
+  const [editingVar, setEditingVar] = useState<string | null>(null); // <-- Añade este estado
   const inputRefs = useRef<Record<string, HTMLInputElement | null>>({});
+
+  // Ref para el input inline
+  const inlineInputRef = useRef<HTMLInputElement | null>(null);
+
+
+  // Maneja el cambio inline en la vista previa
+  const handleInlineChange = (nombreVariable: string, valor: string) => {
+    setDatos(prev => ({
+      ...prev,
+      [nombreVariable]: valor
+    }));
+  };
+
+
+
+    // Enfoca el input inline cuando se activa la edición
+    useEffect(() => {
+      if (editingVar) {
+        // Espera a que el input esté en el DOM
+        setTimeout(() => {
+          const input = document.querySelector<HTMLInputElement>(`input.inline-edit-input[data-var="${editingVar}"]`);
+          input?.focus();
+          inlineInputRef.current = input;
+        }, 0);
+      }
+    }, [editingVar]);
 
   useEffect(() => {
     // Inicializar datos vacíos para cada campo
@@ -193,21 +286,7 @@ const GenerarDocumento: React.FC<GenerarDocumentoProps> = ({
     }
   };
 
-  // Manejar click en variable de la vista previa
-  useEffect(() => {
-    const handler = (e: MouseEvent) => {
-      const target = e.target as HTMLElement;
-      if (target.classList.contains('preview-var')) {
-        const varName = target.getAttribute('data-var');
-        if (varName && inputRefs.current[varName]) {
-          setFocusedVar(varName);
-          inputRefs.current[varName]?.focus();
-        }
-      }
-    };
-    document.addEventListener('click', handler);
-    return () => document.removeEventListener('click', handler);
-  }, []);
+
 
   return (
     <div className="max-w-4xl mx-auto p-6 bg-white rounded-lg shadow-md">
@@ -276,23 +355,26 @@ const GenerarDocumento: React.FC<GenerarDocumentoProps> = ({
             <button
               type="button"
               className="bg-purple-600 text-white px-3 py-1 rounded hover:bg-purple-700 text-xs"
-              onClick={() => descargarWordPreview(getPreviewHtml(plantilla.html_con_campos, plantilla.campos_asociados, datos))}
+              onClick={() => descargarWordPreview(renderHtmlConDatos(plantilla.html_con_campos, datos))}
             >
               Descargar Word
             </button>
             <button
               type="button"
               className="bg-emerald-700 text-white px-3 py-1 rounded hover:bg-emerald-800 text-xs"
-              onClick={() => descargarPdfPreview(getPreviewHtml(plantilla.html_con_campos, plantilla.campos_asociados, datos))}
+              onClick={() => descargarPdfPreview(renderHtmlConDatos(plantilla.html_con_campos, datos))}
             >
               Descargar PDF
             </button>
           </div>
         </div>
-        <div
-          className="border border-dashed border-gray-300 rounded-md p-4 bg-gray-50 min-h-[120px] prose max-w-none mt-2 cursor-pointer"
-          dangerouslySetInnerHTML={{ __html: getPreviewHtml(plantilla.html_con_campos, plantilla.campos_asociados, datos) }}
-        />
+        <VistaPreviaInteractiva
+  plantilla={plantilla}
+  datos={datos}
+  editingVar={editingVar}
+  setEditingVar={setEditingVar}
+  handleInlineChange={handleInlineChange}
+/>
       </div>
     </div>
   );

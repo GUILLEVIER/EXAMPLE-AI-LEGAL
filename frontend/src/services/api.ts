@@ -12,7 +12,7 @@ import {
 } from '../types';
 
 const api = axios.create({
-  baseURL: process.env.REACT_APP_API_URL || 'https://beriuson.pythonanywhere.com/',
+  baseURL: process.env.REACT_APP_API_URL || 'http://localhost:8000/',
   headers: {
     'Content-Type': 'application/json',
   },
