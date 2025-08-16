@@ -305,33 +305,7 @@ const GenerarDocumento: React.FC<GenerarDocumentoProps> = ({
         </div>
       )}
 
-    // Recuadro lateral de variables
-    <div className="mb-6 flex flex-col md:flex-row gap-6">
-      <div className="md:w-1/3">
-        <div className="bg-gray-100 border border-gray-300 rounded-md p-4">
-          <h4 className="font-semibold mb-2 text-sm text-gray-700">Variables del documento</h4>
-          <ul className="space-y-2">
-            {plantilla.campos_asociados.map(campo => (
-              <li
-                key={campo.nombre_variable}
-                className="flex justify-between items-center cursor-pointer hover:bg-gray-200 rounded px-2 py-1 transition"
-                onClick={() => {
-                  setFocusedVar(campo.nombre_variable);
-                  inputRefs.current[campo.nombre_variable]?.focus();
-                }}
-              >
-                <span className="font-mono text-xs text-gray-800">{campo.nombre_variable}</span>
-                <span className="text-xs text-gray-600">{datos[campo.nombre_variable] || <span className="italic text-gray-400">Sin valor</span>}</span>
-              </li>
-            ))}
-          </ul>
-        </div>
-      </div>
-      <div className="md:w-2/3 flex-1">
-        {/* Aquí va el formulario y la vista previa como ya tienes */}
-        {/* ... */}
-      </div>
-    </div>
+
 
       <form onSubmit={handleSubmit} className="space-y-6">
         <div>
@@ -374,6 +348,34 @@ const GenerarDocumento: React.FC<GenerarDocumentoProps> = ({
           {cargando ? 'Generando...' : 'Generar Documento'}
         </button>
       </form>
+
+      // Recuadro lateral de variables
+    <div className="mb-6 flex flex-col md:flex-row gap-6">
+      <div className="md:w-1/3">
+        <div className="bg-gray-100 border border-gray-300 rounded-md p-4">
+          <h4 className="font-semibold mb-2 text-sm text-gray-700">Variables del documento</h4>
+          <ul className="space-y-2">
+            {plantilla.campos_asociados.map(campo => (
+              <li
+                key={campo.nombre_variable}
+                className="flex justify-between items-center cursor-pointer hover:bg-gray-200 rounded px-2 py-1 transition"
+                onClick={() => {
+                  setFocusedVar(campo.nombre_variable);
+                  inputRefs.current[campo.nombre_variable]?.focus();
+                }}
+              >
+                <span className="font-mono text-xs text-gray-800">{campo.nombre_variable}</span>
+                <span className="text-xs text-gray-600">{datos[campo.nombre_variable] || <span className="italic text-gray-400">Sin valor</span>}</span>
+              </li>
+            ))}
+          </ul>
+        </div>
+      </div>
+      <div className="md:w-2/3 flex-1">
+        {/* Aquí va el formulario y la vista previa como ya tienes */}
+        {/* ... */}
+      </div>
+    </div>
 
       {/* Vista previa y botón de PDF SIEMPRE visibles */}
       <div className="mt-8">
