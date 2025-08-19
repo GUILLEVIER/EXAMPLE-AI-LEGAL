@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { PlantillaDocumento, CampoPlantilla } from '../types';
-import { generarDocumento } from '../services/api';
+import { generarDocumento, obtenerTribunales } from '../services/api';
 import html2pdf from 'html2pdf.js';
 import { Document, Packer, Paragraph, TextRun } from 'docx';
 import parse, { domToReact, HTMLReactParserOptions, Element } from 'html-react-parser';
@@ -225,6 +225,11 @@ const GenerarDocumento: React.FC<GenerarDocumentoProps> = ({
   // Ref para el input inline
   const inlineInputRef = useRef<HTMLInputElement | null>(null);
 
+  const [nombreDocumento, setNombreDocumento] = useState('');
+
+  // 1. Estado para los tribunales (PARA EL COMBOBOX DE TRIBUNALES)
+  const [tribunales, setTribunales] = useState<string[]>([]);
+
 
   // Maneja el cambio inline en la vista previa
   const handleInlineChange = (nombreVariable: string, valor: string) => {
@@ -234,6 +239,18 @@ const GenerarDocumento: React.FC<GenerarDocumentoProps> = ({
     }));
   };
 
+
+    // 2. ESTO ES PARA EL COMBOBOX DE TRIBUNALES
+    // Esto es un ejemplo, Cargar tribunales solo si existe el campo "tribunal_1" o como se llame en la plantilla
+   useEffect(() => {
+      if (plantilla.campos_asociados.some(c => c.nombre_variable === 'tribunal_1')) {
+        obtenerTribunales()
+          .then(setTribunales)
+          .catch(() => setTribunales([]));
+      } else {
+        setTribunales([]);
+      }
+    }, [plantilla]);
 
 
     // Enfoca el input inline cuando se activa la edición
@@ -272,7 +289,7 @@ const GenerarDocumento: React.FC<GenerarDocumentoProps> = ({
     setError(null);
 
     try {
-      const response = await generarDocumento(plantilla.id, datos);
+      const response = await generarDocumento(plantilla.id, datos, nombreDocumento);
       onDocumentoGenerado(response.html_resultante);
       setMensaje('¡Documento generado correctamente!');
       setMensajeTipo('exito');
@@ -309,10 +326,41 @@ const GenerarDocumento: React.FC<GenerarDocumentoProps> = ({
 
       <form onSubmit={handleSubmit} className="space-y-6">
         <div>
+          <input
+              type="text"
+              value={nombreDocumento}
+              onChange={e => setNombreDocumento(e.target.value)}
+              className="w-full p-2 border rounded"
+              placeholder="Nombre del documento"
+              required
+            />
           <h3 className="text-lg font-semibold mb-4">Datos del Documento</h3>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {plantilla.campos_asociados.map((campo) => (
               <div key={campo.id} className="space-y-2">
+
+
+                  {/* // 3. En el render del formulario */}
+                  {campo.nombre_variable === 'tribunal_1' ? (
+                  <select
+                    value={datos[campo.nombre_variable] || ''}
+                    onChange={e => handleInputChange(campo.nombre_variable, e.target.value)}
+                    className="w-full p-2 border rounded"
+                    required
+                  >
+                    <option value="">Selecciona un tribunal</option>
+                    {tribunales.map((t: any) => (
+                      <option key={t.id} value={t.nombre}>{t.nombre}</option>
+                    ))}
+                  </select>
+                ) : (
+                    null
+                )}
+
+
+
+
+
                 <label className="block text-sm font-medium text-gray-700">
                   {campo.campo_nombre} ({campo.campo_tipo})
                 </label>

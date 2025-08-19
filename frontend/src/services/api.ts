@@ -8,7 +8,7 @@ import {
   GenerarDocumentoData,
   SubirDocumentoResponse,
   TipoPlantillaDocumento,
-  PlantillaCompartida
+  PlantillaCompartida,
 } from '../types';
 
 const api = axios.create({
@@ -85,18 +85,23 @@ export const getPlantilla = async (id: number): Promise<PlantillaDocumento> => {
   return response.data.data;
 };
 
-export const generarDocumento = async (plantillaId: number, datos: Record<string, any>): Promise<{
+export const generarDocumento = async (plantillaId: number, datos: Record<string, any>, nombre?: string): Promise<{
   id: number;
   html_resultante: string;
   mensaje:  string;
 }> => {
-  const response = await api.post(`/documents/v1/plantillas-documentos/${plantillaId}/generar_documento/`, {
-    plantilla_id: plantillaId,
-    datos
-  });
-  console.log(response.data)
+  const payload: any = { plantilla_id: plantillaId, datos };
+  if (nombre) payload.nombre = nombre;
+  console.log("payload: ", payload);
+  const response = await api.post(`/documents/v1/plantillas-documentos/${plantillaId}/generar_documento/`, payload);
   return response.data.data;
 };
+
+// Tribunales
+export async function obtenerTribunales(): Promise<any[]> {
+  const response = await api.get('/companies/v1/tribunales/');
+  return Array.isArray(response?.data?.data?.results) ? response.data.data.results : [];
+}
 
 // Documentos generados
 export const getDocumentosGenerados = async (): Promise<DocumentoGenerado[]> => {

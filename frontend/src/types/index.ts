@@ -85,4 +85,4 @@ export interface PlantillaCompartida {
   usuario_username: string;
   permisos: 'lectura' | 'edicion';
   fecha_compartida: string;
-} 
+}
