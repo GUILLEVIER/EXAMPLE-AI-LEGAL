@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { getPlantilla, getCamposDisponibles, crearCampoDisponible, crearPlantilla, eliminarPlantilla, actualizarPlantilla, getTiposPlantilla } from '../services/api';
-import { PlantillaDocumento, CampoPlantilla, CampoDisponible, TipoPlantillaDocumento } from '../types';
+import { getPlantilla, getCamposDisponibles, crearCampoDisponible, crearPlantilla, eliminarPlantilla, actualizarPlantilla, getTiposPlantilla, getClasificacionesPlantilla, getCategoriasPlantilla } from '../services/api';
+import { PlantillaDocumento, CampoPlantilla, CampoDisponible, TipoPlantillaDocumento, ClasificacionPlantillaDocumento, CategoriaPlantillaDocumento } from '../types';
 import ModalCrearCampo from './ModalCrearCampo';
 import EditorDocumento from './EditorDocumento';
 import html2pdf from 'html2pdf.js';
@@ -56,13 +56,20 @@ const EditarPlantilla: React.FC = () => {
   const [camposAsignados, setCamposAsignados] = useState<Array<{ campo_id: number; nombre_variable: string }>>([]);
   const [datosPreview, setDatosPreview] = useState<Record<string, string>>({});
   const [tiposPlantilla, setTiposPlantilla] = useState<TipoPlantillaDocumento[]>([]);
+  const [clasificacionesPlantilla, setClasificacionesPlantilla] = useState<ClasificacionPlantillaDocumento[]>([]);
+  const [categoriasPlantilla, setCategoriasPlantilla] = useState<CategoriaPlantillaDocumento[]>([]);
+  // Estado para el tipo de plantilla seleccionado
   const [tipoSeleccionado, setTipoSeleccionado] = useState<number | null>(null);
+  const [clasificacionSeleccionada, setClasificacionSeleccionada] = useState<number | null>(null);
+  const [categoriaSeleccionada, setCategoriaSeleccionada] = useState<number | null>(null);
 
   useEffect(() => {
     if (id) {
       cargarPlantilla(Number(id));
       cargarCampos();
       cargarTiposPlantilla();
+      cargarClasificacionesPlantilla();
+      cargarCategoriasPlantilla();
     }
     // eslint-disable-next-line
   }, [id]);
@@ -78,6 +85,10 @@ const EditarPlantilla: React.FC = () => {
       setHtmlConCampos(data.html_con_campos || '');
       // Intentar obtener el tipo de diferentes formas
       const tipoId = data.tipo?.id || data.tipo_info?.id || null;
+      const clasificacionId = data.clasificacion?.id || data.clasificacion_info?.id || null;
+      const categoriaId = data.categoria?.id || data.categoria?.id || null;
+      setClasificacionSeleccionada(clasificacionId);
+      setCategoriaSeleccionada(categoriaId);
       setTipoSeleccionado(tipoId);
       console.log('Tipo cargado:', data.tipo); // Debug
       console.log('Tipo info cargado:', data.tipo_info); // Debug
@@ -108,11 +119,31 @@ const EditarPlantilla: React.FC = () => {
   const cargarTiposPlantilla = async () => {
     try {
       const data = await getTiposPlantilla();
+      console.log('Tipos de plantilla cargados:', data); // Debug
       setTiposPlantilla(data);
     } catch (e) {
       setError('Error al cargar tipos de plantilla');
     }
   };
+    const cargarClasificacionesPlantilla = async () => {
+        try {
+        const data = await getClasificacionesPlantilla();
+        console.log('Clasificaciones cargadas:', data); // Debug
+        setClasificacionesPlantilla(data);
+        } catch (e) {
+        setError('Error al cargar clasificaciones de plantilla');
+        }
+    };
+
+    const cargarCategoriasPlantilla = async () => {
+        try {
+        const data = await getCategoriasPlantilla();
+        console.log('Categorías cargadas:', data); // Debug
+        setCategoriasPlantilla(data);
+        } catch (e) {
+        setError('Error al cargar categorías de plantilla');
+        }
+    };
 
   // Reemplazar fetchApi para eliminar plantilla
   const handleEliminar = async () => {
@@ -351,12 +382,55 @@ const EditarPlantilla: React.FC = () => {
                 )}
               </div>
             )}
+            {clasificacionesPlantilla.length > 0 && (
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Clasificación de Plantilla</label>
+                <select
+                  value={clasificacionSeleccionada || ''}
+                  onChange={(e) => {
+                    const newValue = e.target.value ? Number(e.target.value) : null;
+                    setClasificacionSeleccionada(newValue);
+                  }}
+                  className="w-full p-2 border border-gray-300 rounded"
+                >
+                  <option value="">-- Seleccionar clasificación de plantilla --</option>
+                  {clasificacionesPlantilla.map((clasificacion) => (
+                    <option key={clasificacion.id} value={clasificacion.id}>
+                      {clasificacion.nombre}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            )}
+            {categoriasPlantilla.length > 0 && (
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Categoría de Plantilla</label>
+                <select
+                  value={categoriaSeleccionada || ''}
+                  onChange={(e) => {
+                    const newValue = e.target.value ? Number(e.target.value) : null;
+                    setCategoriaSeleccionada(newValue);
+                  }}
+                  className="w-full p-2 border border-gray-300 rounded"
+                >
+                  <option value="">-- Seleccionar categoría de plantilla --</option>
+                  {categoriasPlantilla.map((categoria) => (
+                    <option key={categoria.id} value={categoria.id}>
+                      {categoria.nombre}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            )}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">HTML con campos</label>
               <EditorDocumento
                 textoInicial={htmlConCampos}
                 camposDisponibles={campos}
                 tiposPlantilla={tiposPlantilla}
+                clasificacionesPlantilla={clasificacionesPlantilla}
+                categoriasPlantilla={categoriasPlantilla}
+                // Asegurarse de que onChange actualice tanto el HTML como los campos asignados
                 onChange={(nuevoHtml, nuevosCampos) => {
                   setHtmlConCampos(nuevoHtml);
                   const camposActualizados = nuevosCampos.map(c => ({ campo_id: c.campo_id, nombre_variable: c.nombre_variable }));
@@ -367,6 +441,8 @@ const EditarPlantilla: React.FC = () => {
                 nombreInicial={nombre}
                 descripcionInicial={descripcion}
                 tipoInicial={plantilla.tipo}
+                clasificacionInicial={plantilla.clasificacion}
+                categoriaInicial={plantilla.categoria}
                 modoEdicion={true}
               />
               <p className="text-xs text-gray-500 mt-1">Puedes usar variables como {'{{nombre_cliente}}'} en el HTML.</p>

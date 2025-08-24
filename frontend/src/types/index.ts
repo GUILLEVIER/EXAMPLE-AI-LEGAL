@@ -18,6 +18,16 @@ export interface TipoPlantillaDocumento {
   nombre: string;
 }
 
+export interface CategoriaPlantillaDocumento {
+  id: number;
+  nombre: string;
+}
+
+export interface ClasificacionPlantillaDocumento {
+  id: number;
+  nombre: string;
+}
+
 export interface CampoPlantilla {
   id: number;
   campo: number;
@@ -33,10 +43,20 @@ export interface PlantillaDocumento {
   html_con_campos: string;
   usuario: number;
   tipo?: TipoPlantillaDocumento;
+  categoria?: CategoriaPlantillaDocumento;
+  clasificacion?: ClasificacionPlantillaDocumento;
   tipo_info?: {
     id: number;
     nombre: string;
   };
+    categoria_info?: {
+        id: number;
+        nombre: string;
+    };
+    clasificacion_info?: {
+        id: number;
+        nombre: string;
+    };
   fecha_creacion: string;
   campos_asociados: CampoPlantilla[];
   es_favorito?: boolean;
@@ -59,6 +79,8 @@ export interface CrearPlantillaData {
   descripcion?: string;
   html_con_campos: string;
   tipo_id?: number;
+  clasificacion_id?: number;
+  categoria_id?: number;
   campos?: Array<{
     campo_id: number;
     nombre_variable: string;
@@ -72,7 +94,7 @@ export interface GenerarDocumentoData {
 
 export interface SubirDocumentoResponse {
   id: number;
-  texto_extraido: string;
+  html: string;
   tipo: string;
   nombre_original: string;
 }

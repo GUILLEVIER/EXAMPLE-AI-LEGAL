@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import SubirDocumento from './SubirDocumento';
 import EditorDocumento from './EditorDocumento';
-import { SubirDocumentoResponse, CampoDisponible, CrearPlantillaData, TipoPlantillaDocumento } from '../types';
-import { getCamposDisponibles, crearCampoDisponible, crearPlantilla, getPlantillas, getTiposPlantilla } from '../services/api';
+import { SubirDocumentoResponse, CampoDisponible, CrearPlantillaData, TipoPlantillaDocumento, ClasificacionPlantillaDocumento, CategoriaPlantillaDocumento } from '../types';
+import { getCamposDisponibles, crearCampoDisponible, crearPlantilla, getPlantillas, getTiposPlantilla, getClasificacionesPlantilla, getCategoriasPlantilla } from '../services/api';
 import ModalCrearCampo from './ModalCrearCampo';
 
 const tiposCampo = [
@@ -16,6 +16,8 @@ const FlujoSubirDocumento: React.FC = () => {
   const [documentoSubido, setDocumentoSubido] = useState<SubirDocumentoResponse | null>(null);
   const [camposDisponibles, setCamposDisponibles] = useState<CampoDisponible[]>([]);
   const [tiposPlantilla, setTiposPlantilla] = useState<TipoPlantillaDocumento[]>([]);
+  const [clasificacionesPlantilla, setClasificacionesPlantilla] = useState<ClasificacionPlantillaDocumento[]>([]);
+  const [categoriasPlantilla, setCategoriasPlantilla] = useState<CategoriaPlantillaDocumento[]>([]);
   const [cargando, setCargando] = useState(false);
   const [exito, setExito] = useState<string | null>(null);
   const [modalCampo, setModalCampo] = useState(false);
@@ -24,6 +26,8 @@ const FlujoSubirDocumento: React.FC = () => {
   useEffect(() => {
     cargarCamposDisponibles();
     cargarTiposPlantilla();
+    cargarClasificacionesPlantilla();
+    cargarCategoriasPlantilla();
   }, []);
 
   const cargarCamposDisponibles = async () => {
@@ -43,21 +47,41 @@ const FlujoSubirDocumento: React.FC = () => {
       // Manejar error
     }
   };
+    const cargarClasificacionesPlantilla = async () => {
+        try {
+        const clasificaciones = await getClasificacionesPlantilla();
+        setClasificacionesPlantilla(clasificaciones);
+        } catch (error) {
+        // Manejar error
+        }
+    };
+    const cargarCategoriasPlantilla = async () => {
+        try {
+        const categorias = await getCategoriasPlantilla();
+        setCategoriasPlantilla(categorias);
+        } catch (error) {
+        // Manejar error
+        }
+    };
 
   const handleDocumentoSubido = (response: SubirDocumentoResponse) => {
+      console.log('HTML subido:', response.html);
     setDocumentoSubido(response);
     setPaso('editar');
   };
 
-  const handlePlantillaCreada = async (nombre: string, descripcion: string, htmlConCampos: string, camposAsignados: Array<{campo_id: number, nombre_variable: string}>, tipoId?: number) => {
+  const handlePlantillaCreada = async (nombre: string, descripcion: string, htmlConCampos: string, camposAsignados: Array<{campo_id: number, nombre_variable: string}>, tipoId?: number, clasificacionId?: number, categoriaId?: number) => {
     if (!documentoSubido) return;
     setCargando(true);
     try {
+
       const plantillaData: CrearPlantillaData = {
         nombre,
         descripcion,
         html_con_campos: htmlConCampos,
         tipo_id: tipoId,
+        clasificacion_id: clasificacionId,
+        categoria_id: categoriaId,
         campos: camposAsignados
       };
       await crearPlantilla(plantillaData);
@@ -99,9 +123,11 @@ const FlujoSubirDocumento: React.FC = () => {
           <h2 className="text-2xl font-bold text-center mb-6">Editar Documento</h2>
 
           <EditorDocumento
-            textoInicial={documentoSubido.texto_extraido}
+            textoInicial={documentoSubido.html}
             camposDisponibles={camposDisponibles}
             tiposPlantilla={tiposPlantilla}
+            clasificacionesPlantilla={clasificacionesPlantilla}
+            categoriasPlantilla={categoriasPlantilla}
             onPlantillaCreada={handlePlantillaCreada}
             onCrearCampo={() => setModalCampo(true)}
           />

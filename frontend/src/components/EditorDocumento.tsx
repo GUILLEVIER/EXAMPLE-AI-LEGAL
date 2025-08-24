@@ -7,19 +7,24 @@ import { TextStyle } from '@tiptap/extension-text-style';
 import { FontFamily } from '@tiptap/extension-font-family';
 import { FontSize } from '@tiptap/extension-font-size';
 import { TextAlign } from '@tiptap/extension-text-align';
-import { CampoDisponible, TipoPlantillaDocumento } from '../types';
+import { TableKit } from '@tiptap/extension-table';
+import { CampoDisponible, TipoPlantillaDocumento, ClasificacionPlantillaDocumento, CategoriaPlantillaDocumento } from '../types';
 import './EditorDocumento.css';
 
 interface EditorDocumentoProps {
   textoInicial: string;
   camposDisponibles: CampoDisponible[];
   tiposPlantilla?: TipoPlantillaDocumento[];
-  onPlantillaCreada: (nombre: string, descripcion: string, htmlConCampos: string, camposAsignados: Array<{campo_id: number, nombre_variable: string}>, tipoId?: number) => void;
+  clasificacionesPlantilla?: ClasificacionPlantillaDocumento[];
+  categoriasPlantilla?: CategoriaPlantillaDocumento[];
+  onPlantillaCreada: (nombre: string, descripcion: string, htmlConCampos: string, camposAsignados: Array<{campo_id: number, nombre_variable: string}>, tipoId?: number, clasificacionId?: number, categoriaId?: number) => void;
   onChange?: (htmlConCampos: string, camposAsignados: Array<{campo_id: number, nombre_variable: string}>) => void;
   onCrearCampo?: () => void;
   nombreInicial?: string;
   descripcionInicial?: string;
   tipoInicial?: TipoPlantillaDocumento;
+  clasificacionInicial?: ClasificacionPlantillaDocumento;
+  categoriaInicial?: CategoriaPlantillaDocumento;
   modoEdicion?: boolean;
 }
 
@@ -63,12 +68,16 @@ const EditorDocumento: React.FC<EditorDocumentoProps> = ({
   textoInicial,
   camposDisponibles,
   tiposPlantilla = [],
+  clasificacionesPlantilla = [],
+  categoriasPlantilla = [],
   onPlantillaCreada,
   onChange,
   onCrearCampo,
   nombreInicial = '',
   descripcionInicial = '',
   tipoInicial,
+  clasificacionInicial,
+  categoriaInicial,
   modoEdicion = false
 }) => {
   const [camposAsignados, setCamposAsignados] = useState<CampoAsignado[]>([]);
@@ -78,6 +87,8 @@ const EditorDocumento: React.FC<EditorDocumentoProps> = ({
   const [nombre, setNombre] = useState(nombreInicial);
   const [descripcion, setDescripcion] = useState(descripcionInicial);
   const [tipoSeleccionado, setTipoSeleccionado] = useState<number | null>(tipoInicial?.id || null);
+  const [clasificacionSeleccionada, setClasificacionSeleccionada] = useState<number | null>(clasificacionInicial?.id || null);
+  const [categoriaSeleccionada, setCategoriaSeleccionada] = useState<number | null>(categoriaInicial?.id || null);
 
   const [selectionTimeout, setSelectionTimeout] = useState<NodeJS.Timeout | null>(null);
 
@@ -98,8 +109,10 @@ const EditorDocumento: React.FC<EditorDocumentoProps> = ({
       }),
       VariableMark,
       TextStyle,
-      FontFamily,
       FontSize,
+      TableKit.configure({
+        table: { resizable: true },
+      }),
       TextAlign.configure({
         types: ['heading', 'paragraph'],
       }),
@@ -181,7 +194,8 @@ const EditorDocumento: React.FC<EditorDocumentoProps> = ({
   const crearPlantilla = () => {
     if (editor) {
       const htmlConCampos = editor.getHTML();
-      onPlantillaCreada(nombre, descripcion, htmlConCampos, camposAsignados, tipoSeleccionado || undefined);
+      console.log('HTML antes de guardar:', htmlConCampos);
+      onPlantillaCreada(nombre, descripcion, htmlConCampos, camposAsignados, tipoSeleccionado || undefined, clasificacionSeleccionada || undefined, categoriaSeleccionada || undefined);
     }
   };
 
@@ -244,6 +258,34 @@ const EditorDocumento: React.FC<EditorDocumentoProps> = ({
               ))}
             </select>
           )}
+            {clasificacionSeleccionada !== undefined && (
+                <select
+                value={clasificacionSeleccionada || ''}
+                onChange={(e) => setClasificacionSeleccionada(e.target.value ? Number(e.target.value) : null)}
+                className="p-2 border border-gray-300 rounded"
+                >
+                <option value="">-- Seleccionar clasificación --</option>
+                {clasificacionesPlantilla?.map((clasificacion) => (
+                    <option key={clasificacion.id} value={clasificacion.id}>
+                    {clasificacion.nombre}
+                    </option>
+                ))}
+                </select>
+            )}
+            {categoriaSeleccionada !== undefined && (
+                <select
+                value={categoriaSeleccionada || ''}
+                onChange={(e) => setCategoriaSeleccionada(e.target.value ? Number(e.target.value) : null)}
+                className="p-2 border border-gray-300 rounded"
+                >
+                <option value="">-- Seleccionar categoría --</option>
+                {categoriasPlantilla?.map((categoria) => (
+                    <option key={categoria.id} value={categoria.id}>
+                    {categoria.nombre}
+                    </option>
+                ))}
+                </select>
+            )}
         </div>
       )}
 

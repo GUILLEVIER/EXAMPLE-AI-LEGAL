@@ -8,6 +8,8 @@ import {
   GenerarDocumentoData,
   SubirDocumentoResponse,
   TipoPlantillaDocumento,
+  CategoriaPlantillaDocumento,
+  ClasificacionPlantillaDocumento,
   PlantillaCompartida,
 } from '../types';
 
@@ -134,6 +136,18 @@ export const getMisFavoritos = async (): Promise<PlantillaDocumento[]> => {
 // Tipos de plantilla
 export const getTiposPlantilla = async (): Promise<TipoPlantillaDocumento[]> => {
   const response = await api.get('/documents/v1/tipos-plantilla/');
+  return response.data.data.results;
+};
+
+// Categorias de plantilla
+export const getCategoriasPlantilla = async (): Promise<CategoriaPlantillaDocumento[]> => {
+  const response = await api.get('/documents/v1/categorias-plantilla/');
+  return response.data.data.results;
+};
+
+// Clasificaciones de plantilla
+export const getClasificacionesPlantilla = async (): Promise<ClasificacionPlantillaDocumento[]> => {
+  const response = await api.get('/documents/v1/clasificacion-plantillas-generales/');
   return response.data.data.results;
 };
 
