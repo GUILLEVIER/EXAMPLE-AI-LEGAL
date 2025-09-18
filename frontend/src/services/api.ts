@@ -9,7 +9,7 @@ import {
   SubirDocumentoResponse,
   TipoPlantillaDocumento,
   CategoriaPlantillaDocumento,
-  ClasificacionPlantillaDocumento,
+  MateriaPlantillaDocumento,
   PlantillaCompartida,
 } from '../types';
 
@@ -145,9 +145,9 @@ export const getCategoriasPlantilla = async (): Promise<CategoriaPlantillaDocume
   return response.data.data.results;
 };
 
-// Clasificaciones de plantilla
-export const getClasificacionesPlantilla = async (): Promise<ClasificacionPlantillaDocumento[]> => {
-  const response = await api.get('/documents/v1/clasificacion-plantillas-generales/');
+// materias de plantilla
+export const getMateriasPlantilla = async (): Promise<MateriaPlantillaDocumento[]> => {
+  const response = await api.get('/documents/v1/materia-plantillas-generales/');
   return response.data.data.results;
 };
 

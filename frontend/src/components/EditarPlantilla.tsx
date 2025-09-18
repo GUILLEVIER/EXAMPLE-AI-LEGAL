@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { getPlantilla, getCamposDisponibles, crearCampoDisponible, crearPlantilla, eliminarPlantilla, actualizarPlantilla, getTiposPlantilla, getClasificacionesPlantilla, getCategoriasPlantilla } from '../services/api';
-import { PlantillaDocumento, CampoPlantilla, CampoDisponible, TipoPlantillaDocumento, ClasificacionPlantillaDocumento, CategoriaPlantillaDocumento } from '../types';
+import { getPlantilla, getCamposDisponibles, crearCampoDisponible, crearPlantilla, eliminarPlantilla, actualizarPlantilla, getTiposPlantilla, getMateriasPlantilla, getCategoriasPlantilla } from '../services/api';
+import { PlantillaDocumento, CampoPlantilla, CampoDisponible, TipoPlantillaDocumento, MateriaPlantillaDocumento, CategoriaPlantillaDocumento } from '../types';
 import ModalCrearCampo from './ModalCrearCampo';
 import EditorDocumento from './EditorDocumento';
 import html2pdf from 'html2pdf.js';
@@ -56,11 +56,11 @@ const EditarPlantilla: React.FC = () => {
   const [camposAsignados, setCamposAsignados] = useState<Array<{ campo_id: number; nombre_variable: string }>>([]);
   const [datosPreview, setDatosPreview] = useState<Record<string, string>>({});
   const [tiposPlantilla, setTiposPlantilla] = useState<TipoPlantillaDocumento[]>([]);
-  const [clasificacionesPlantilla, setClasificacionesPlantilla] = useState<ClasificacionPlantillaDocumento[]>([]);
+  const [materiasPlantilla, setMateriasPlantilla] = useState<MateriaPlantillaDocumento[]>([]);
   const [categoriasPlantilla, setCategoriasPlantilla] = useState<CategoriaPlantillaDocumento[]>([]);
   // Estado para el tipo de plantilla seleccionado
   const [tipoSeleccionado, setTipoSeleccionado] = useState<number | null>(null);
-  const [clasificacionSeleccionada, setClasificacionSeleccionada] = useState<number | null>(null);
+  const [materiaSeleccionada, setMateriaSeleccionada] = useState<number | null>(null);
   const [categoriaSeleccionada, setCategoriaSeleccionada] = useState<number | null>(null);
 
   useEffect(() => {
@@ -68,7 +68,7 @@ const EditarPlantilla: React.FC = () => {
       cargarPlantilla(Number(id));
       cargarCampos();
       cargarTiposPlantilla();
-      cargarClasificacionesPlantilla();
+      cargarMateriasPlantilla();
       cargarCategoriasPlantilla();
     }
     // eslint-disable-next-line
@@ -85,9 +85,9 @@ const EditarPlantilla: React.FC = () => {
       setHtmlConCampos(data.html_con_campos || '');
       // Intentar obtener el tipo de diferentes formas
       const tipoId = data.tipo?.id || data.tipo_info?.id || null;
-      const clasificacionId = data.clasificacion?.id || data.clasificacion_info?.id || null;
+      const materiaId = data.materia?.id || data.materia_info?.id || null;
       const categoriaId = data.categoria?.id || data.categoria?.id || null;
-      setClasificacionSeleccionada(clasificacionId);
+      setMateriaSeleccionada(materiaId);
       setCategoriaSeleccionada(categoriaId);
       setTipoSeleccionado(tipoId);
       console.log('Tipo cargado:', data.tipo); // Debug
@@ -125,13 +125,13 @@ const EditarPlantilla: React.FC = () => {
       setError('Error al cargar tipos de plantilla');
     }
   };
-    const cargarClasificacionesPlantilla = async () => {
+    const cargarMateriasPlantilla = async () => {
         try {
-        const data = await getClasificacionesPlantilla();
-        console.log('Clasificaciones cargadas:', data); // Debug
-        setClasificacionesPlantilla(data);
+        const data = await getMateriasPlantilla();
+        console.log('Materias cargadas:', data); // Debug
+        setMateriasPlantilla(data);
         } catch (e) {
-        setError('Error al cargar clasificaciones de plantilla');
+        setError('Error al cargar materias de plantilla');
         }
     };
 
@@ -382,21 +382,21 @@ const EditarPlantilla: React.FC = () => {
                 )}
               </div>
             )}
-            {clasificacionesPlantilla.length > 0 && (
+            {materiasPlantilla.length > 0 && (
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Clasificación de Plantilla</label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Materia de Plantilla</label>
                 <select
-                  value={clasificacionSeleccionada || ''}
+                  value={materiaSeleccionada || ''}
                   onChange={(e) => {
                     const newValue = e.target.value ? Number(e.target.value) : null;
-                    setClasificacionSeleccionada(newValue);
+                    setMateriaSeleccionada(newValue);
                   }}
                   className="w-full p-2 border border-gray-300 rounded"
                 >
-                  <option value="">-- Seleccionar clasificación de plantilla --</option>
-                  {clasificacionesPlantilla.map((clasificacion) => (
-                    <option key={clasificacion.id} value={clasificacion.id}>
-                      {clasificacion.nombre}
+                  <option value="">-- Seleccionar materia de plantilla --</option>
+                  {materiasPlantilla.map((materia) => (
+                    <option key={materia.id} value={materia.id}>
+                      {materia.nombre}
                     </option>
                   ))}
                 </select>
@@ -428,7 +428,7 @@ const EditarPlantilla: React.FC = () => {
                 textoInicial={htmlConCampos}
                 camposDisponibles={campos}
                 tiposPlantilla={tiposPlantilla}
-                clasificacionesPlantilla={clasificacionesPlantilla}
+                materiasPlantilla={materiasPlantilla}
                 categoriasPlantilla={categoriasPlantilla}
                 // Asegurarse de que onChange actualice tanto el HTML como los campos asignados
                 onChange={(nuevoHtml, nuevosCampos) => {
@@ -441,7 +441,7 @@ const EditarPlantilla: React.FC = () => {
                 nombreInicial={nombre}
                 descripcionInicial={descripcion}
                 tipoInicial={plantilla.tipo}
-                clasificacionInicial={plantilla.clasificacion}
+                materiaInicial={plantilla.materia}
                 categoriaInicial={plantilla.categoria}
                 modoEdicion={true}
               />

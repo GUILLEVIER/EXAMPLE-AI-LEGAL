@@ -23,7 +23,7 @@ export interface CategoriaPlantillaDocumento {
   nombre: string;
 }
 
-export interface ClasificacionPlantillaDocumento {
+export interface MateriaPlantillaDocumento {
   id: number;
   nombre: string;
 }
@@ -44,7 +44,7 @@ export interface PlantillaDocumento {
   usuario: number;
   tipo?: TipoPlantillaDocumento;
   categoria?: CategoriaPlantillaDocumento;
-  clasificacion?: ClasificacionPlantillaDocumento;
+  materia?: MateriaPlantillaDocumento;
   tipo_info?: {
     id: number;
     nombre: string;
@@ -53,7 +53,7 @@ export interface PlantillaDocumento {
         id: number;
         nombre: string;
     };
-    clasificacion_info?: {
+    materia_info?: {
         id: number;
         nombre: string;
     };
@@ -79,7 +79,7 @@ export interface CrearPlantillaData {
   descripcion?: string;
   html_con_campos: string;
   tipo_id?: number;
-  clasificacion_id?: number;
+  materia_id?: number;
   categoria_id?: number;
   campos?: Array<{
     campo_id: number;

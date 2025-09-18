@@ -8,22 +8,22 @@ import { FontFamily } from '@tiptap/extension-font-family';
 import { FontSize } from '@tiptap/extension-font-size';
 import { TextAlign } from '@tiptap/extension-text-align';
 import { TableKit } from '@tiptap/extension-table';
-import { CampoDisponible, TipoPlantillaDocumento, ClasificacionPlantillaDocumento, CategoriaPlantillaDocumento } from '../types';
+import { CampoDisponible, TipoPlantillaDocumento, MateriaPlantillaDocumento, CategoriaPlantillaDocumento } from '../types';
 import './EditorDocumento.css';
 
 interface EditorDocumentoProps {
   textoInicial: string;
   camposDisponibles: CampoDisponible[];
   tiposPlantilla?: TipoPlantillaDocumento[];
-  clasificacionesPlantilla?: ClasificacionPlantillaDocumento[];
+  materiasPlantilla?: MateriaPlantillaDocumento[];
   categoriasPlantilla?: CategoriaPlantillaDocumento[];
-  onPlantillaCreada: (nombre: string, descripcion: string, htmlConCampos: string, camposAsignados: Array<{campo_id: number, nombre_variable: string}>, tipoId?: number, clasificacionId?: number, categoriaId?: number) => void;
+  onPlantillaCreada: (nombre: string, descripcion: string, htmlConCampos: string, camposAsignados: Array<{campo_id: number, nombre_variable: string}>, tipoId?: number, materiaId?: number, categoriaId?: number) => void;
   onChange?: (htmlConCampos: string, camposAsignados: Array<{campo_id: number, nombre_variable: string}>) => void;
   onCrearCampo?: () => void;
   nombreInicial?: string;
   descripcionInicial?: string;
   tipoInicial?: TipoPlantillaDocumento;
-  clasificacionInicial?: ClasificacionPlantillaDocumento;
+  materiaInicial?: MateriaPlantillaDocumento;
   categoriaInicial?: CategoriaPlantillaDocumento;
   modoEdicion?: boolean;
 }
@@ -68,7 +68,7 @@ const EditorDocumento: React.FC<EditorDocumentoProps> = ({
   textoInicial,
   camposDisponibles,
   tiposPlantilla = [],
-  clasificacionesPlantilla = [],
+  materiasPlantilla = [],
   categoriasPlantilla = [],
   onPlantillaCreada,
   onChange,
@@ -76,7 +76,7 @@ const EditorDocumento: React.FC<EditorDocumentoProps> = ({
   nombreInicial = '',
   descripcionInicial = '',
   tipoInicial,
-  clasificacionInicial,
+  materiaInicial,
   categoriaInicial,
   modoEdicion = false
 }) => {
@@ -87,7 +87,7 @@ const EditorDocumento: React.FC<EditorDocumentoProps> = ({
   const [nombre, setNombre] = useState(nombreInicial);
   const [descripcion, setDescripcion] = useState(descripcionInicial);
   const [tipoSeleccionado, setTipoSeleccionado] = useState<number | null>(tipoInicial?.id || null);
-  const [clasificacionSeleccionada, setClasificacionSeleccionada] = useState<number | null>(clasificacionInicial?.id || null);
+  const [materiaSeleccionada, setMateriaSeleccionada] = useState<number | null>(materiaInicial?.id || null);
   const [categoriaSeleccionada, setCategoriaSeleccionada] = useState<number | null>(categoriaInicial?.id || null);
 
   const [selectionTimeout, setSelectionTimeout] = useState<NodeJS.Timeout | null>(null);
@@ -195,7 +195,7 @@ const EditorDocumento: React.FC<EditorDocumentoProps> = ({
     if (editor) {
       const htmlConCampos = editor.getHTML();
       console.log('HTML antes de guardar:', htmlConCampos);
-      onPlantillaCreada(nombre, descripcion, htmlConCampos, camposAsignados, tipoSeleccionado || undefined, clasificacionSeleccionada || undefined, categoriaSeleccionada || undefined);
+      onPlantillaCreada(nombre, descripcion, htmlConCampos, camposAsignados, tipoSeleccionado || undefined, materiaSeleccionada || undefined, categoriaSeleccionada || undefined);
     }
   };
 
@@ -258,16 +258,16 @@ const EditorDocumento: React.FC<EditorDocumentoProps> = ({
               ))}
             </select>
           )}
-            {clasificacionSeleccionada !== undefined && (
+            {materiaSeleccionada !== undefined && (
                 <select
-                value={clasificacionSeleccionada || ''}
-                onChange={(e) => setClasificacionSeleccionada(e.target.value ? Number(e.target.value) : null)}
+                value={materiaSeleccionada || ''}
+                onChange={(e) => setMateriaSeleccionada(e.target.value ? Number(e.target.value) : null)}
                 className="p-2 border border-gray-300 rounded"
                 >
-                <option value="">-- Seleccionar clasificación --</option>
-                {clasificacionesPlantilla?.map((clasificacion) => (
-                    <option key={clasificacion.id} value={clasificacion.id}>
-                    {clasificacion.nombre}
+                <option value="">-- Seleccionar materia --</option>
+                {materiasPlantilla?.map((materia) => (
+                    <option key={materia.id} value={materia.id}>
+                    {materia.nombre}
                     </option>
                 ))}
                 </select>

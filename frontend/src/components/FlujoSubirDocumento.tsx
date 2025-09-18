@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import SubirDocumento from './SubirDocumento';
 import EditorDocumento from './EditorDocumento';
-import { SubirDocumentoResponse, CampoDisponible, CrearPlantillaData, TipoPlantillaDocumento, ClasificacionPlantillaDocumento, CategoriaPlantillaDocumento } from '../types';
-import { getCamposDisponibles, crearCampoDisponible, crearPlantilla, getPlantillas, getTiposPlantilla, getClasificacionesPlantilla, getCategoriasPlantilla } from '../services/api';
+import { SubirDocumentoResponse, CampoDisponible, CrearPlantillaData, TipoPlantillaDocumento, MateriaPlantillaDocumento, CategoriaPlantillaDocumento } from '../types';
+import { getCamposDisponibles, crearCampoDisponible, crearPlantilla, getPlantillas, getTiposPlantilla, getMateriasPlantilla, getCategoriasPlantilla } from '../services/api';
 import ModalCrearCampo from './ModalCrearCampo';
 
 const tiposCampo = [
@@ -16,7 +16,7 @@ const FlujoSubirDocumento: React.FC = () => {
   const [documentoSubido, setDocumentoSubido] = useState<SubirDocumentoResponse | null>(null);
   const [camposDisponibles, setCamposDisponibles] = useState<CampoDisponible[]>([]);
   const [tiposPlantilla, setTiposPlantilla] = useState<TipoPlantillaDocumento[]>([]);
-  const [clasificacionesPlantilla, setClasificacionesPlantilla] = useState<ClasificacionPlantillaDocumento[]>([]);
+  const [materiasPlantilla, setMateriasPlantilla] = useState<MateriaPlantillaDocumento[]>([]);
   const [categoriasPlantilla, setCategoriasPlantilla] = useState<CategoriaPlantillaDocumento[]>([]);
   const [cargando, setCargando] = useState(false);
   const [exito, setExito] = useState<string | null>(null);
@@ -26,7 +26,7 @@ const FlujoSubirDocumento: React.FC = () => {
   useEffect(() => {
     cargarCamposDisponibles();
     cargarTiposPlantilla();
-    cargarClasificacionesPlantilla();
+    cargarMateriasPlantilla();
     cargarCategoriasPlantilla();
   }, []);
 
@@ -47,10 +47,10 @@ const FlujoSubirDocumento: React.FC = () => {
       // Manejar error
     }
   };
-    const cargarClasificacionesPlantilla = async () => {
+    const cargarMateriasPlantilla = async () => {
         try {
-        const clasificaciones = await getClasificacionesPlantilla();
-        setClasificacionesPlantilla(clasificaciones);
+        const materias = await getMateriasPlantilla();
+        setMateriasPlantilla(materias);
         } catch (error) {
         // Manejar error
         }
@@ -70,7 +70,7 @@ const FlujoSubirDocumento: React.FC = () => {
     setPaso('editar');
   };
 
-  const handlePlantillaCreada = async (nombre: string, descripcion: string, htmlConCampos: string, camposAsignados: Array<{campo_id: number, nombre_variable: string}>, tipoId?: number, clasificacionId?: number, categoriaId?: number) => {
+  const handlePlantillaCreada = async (nombre: string, descripcion: string, htmlConCampos: string, camposAsignados: Array<{campo_id: number, nombre_variable: string}>, tipoId?: number, materiaId?: number, categoriaId?: number) => {
     if (!documentoSubido) return;
     setCargando(true);
     try {
@@ -80,7 +80,7 @@ const FlujoSubirDocumento: React.FC = () => {
         descripcion,
         html_con_campos: htmlConCampos,
         tipo_id: tipoId,
-        clasificacion_id: clasificacionId,
+        materia_id: materiaId,
         categoria_id: categoriaId,
         campos: camposAsignados
       };
@@ -126,7 +126,7 @@ const FlujoSubirDocumento: React.FC = () => {
             textoInicial={documentoSubido.html}
             camposDisponibles={camposDisponibles}
             tiposPlantilla={tiposPlantilla}
-            clasificacionesPlantilla={clasificacionesPlantilla}
+            materiasPlantilla={materiasPlantilla}
             categoriasPlantilla={categoriasPlantilla}
             onPlantillaCreada={handlePlantillaCreada}
             onCrearCampo={() => setModalCampo(true)}
